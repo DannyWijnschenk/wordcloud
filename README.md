@@ -2,7 +2,7 @@
 
 Import the xml file in Caché Studio
 
-Call the CSP page with parameters domain=<your domain name>&source=<source id>
+Call the CSP page with parameters domain=(your domain name)&source=(source id)
   
   e.g. http://localhost:57772/csp/user/tagcloud2.csp?domain=pubmed&source=240
   
