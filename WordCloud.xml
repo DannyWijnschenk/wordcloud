@@ -1,79 +1,79 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2015.1 (Build 429U)" ts="2015-05-20 10:33:35">
-<Class name="Utils.CSP">
-<TimeChanged>63478,49328.44868</TimeChanged>
-<TimeCreated>63478,49328.44868</TimeCreated>
-
-<Method name="Order">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>array:%String,key:%String,data:%String</FormalSpec>
-<ReturnType>%Boolean</ReturnType>
-<Implementation><![CDATA[
-	Set key=$Order(array(key),1,data)
-	return (key'="")
-]]></Implementation>
-</Method>
-</Class>
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.1 (Build 656U)" ts="2018-06-20 17:26:15">
+<Project name="WordCloud" LastModified="2018-06-20 17:25:30.962524">
+  <Items>
+    <ProjectItem name="iKnow.WordCloud" type="CLS"></ProjectItem>
+    <ProjectItem name="csp/sciensano/WordCloud.csp" type="CSP"></ProjectItem>
+    <ProjectItem name="csp/sciensano/jquery.awesomeCloud-0.2.min.js" type="CSP"></ProjectItem>
+    <ProjectItem name="csp/sciensano/jquery.min.js" type="CSP"></ProjectItem>
+  </Items>
+</Project>
 
 
-<Class name="Utils.iKnow">
-<IncludeCode>%IKPublic</IncludeCode>
-<TimeChanged>63586,49489.060824</TimeChanged>
-<TimeCreated>63478,49692.359097</TimeCreated>
-
-<Method name="GetWordCloud">
-<ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[domain:%String,sourceId:%String,orderBy:%String,&Words:%String]]></FormalSpec>
-<Implementation><![CDATA[
-	#dim tSC as %Status = $$$OK
-	#dim e As %Exception.AbstractException
-	#dim objDomain as %iKnow.Domain
-	#dim domainId, iKey, df, spread as %Integer
-	#dim tfidf as %Numeric
-	#dim result,data as %String
-	#dim maxScore = 70
-	Kill Words
-	Try {
-		Set objDomain=##class(%iKnow.Domain).Open(domain)
-		Set domainId=objDomain.Id
-		Do ##class(%iKnow.Queries.EntityAPI).GetBySource(.result, domainId, sourceId, 0,,$$$ENTTYPECONCEPT)
-		Set maxFrequency=0,minFrequency=""
-		Set iKey="" For {
-			Set iKey=$Order(result(iKey),1,data) If iKey="" Quit
-			If $List(data,3)>maxFrequency set maxFrequency=$List(data,3)
-			If ($List(data,3)<minFrequency)!(minFrequency="") set minFrequency=$List(data,3)
-		}
-		Set iKey="" For {
-			Set iKey=$Order(result(iKey),1,data) If iKey="" Quit
-			Set df = ##class(%iKnow.Queries.EntityAPI).GetFrequency(domainId,$list(data,1))
-			Set spread = ##class(%iKnow.Queries.EntityAPI).GetSpread(domainId,$list(data,1))
-			set tfidf=$Justify($Select(df=0:0,1:$list(data,3)/df),0,2)
-			If orderBy="tfidf" {
-				Set score=$Justify(tfidf*maxScore+10,0,0)
-			} else {
-				Set score=$Justify($List(data,3)/maxFrequency*maxScore,0,0)
-				if score<10 set score=10
+<CSP name="WordCloud.csp" application="/csp/sciensano/" default="1"><![CDATA[
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--><html class="no-js" lang="en"><!--<![endif]-->
+	<head>
+		<meta charset="utf-8">
+		<script src="jquery.min.js"></script>
+		<script src="jquery.awesomeCloud-0.2.min.js"></script>
+		<style type="text/css">
+			.wordcloud {
+				border: 1px solid #036;
+				height: 7in;
+				margin: 0.5in auto;
+				padding: 0;
+				page-break-after: always;
+				page-break-inside: avoid;
+				width: 7in;
 			}
-			if $list(data,2)'?.E1N.E Set Words($i(Words))=$ListBuild($List(data,2), score)
-	/*
-			Write "    {",!
-			Write "     ""concept"" : """,$List(data,2),""",",!
-			Write "     ""frequency"" : ",$List(data,3),",",!
-			Write "     ""tfidf"" : ",tfidf,",",!
-			Write "     ""spread"" : ",spread,"",!
-			Write "    }"
-			If $Order(result(iKey))'="" Write ","
-	*/
-		}		
-	} Catch e {
-	
-	}
-]]></Implementation>
-</Method>
-</Class>
+		</style>
+	</head>
+	<body>
+	<script language="cache" runat="server">
+	  Set domainName=$Get(%request.Data("domain",1))
+	  Set sourceId=$Get(%request.Data("source",1))
+	  Do ##class(iKnow.WordCloud).GetWordCloud(domainName,sourceId,"tfidf",.words)
+	  set word=""
+	</script>
+		<div role="main">
+			<div id="wordcloud2" class="wordcloud">
+			  <csp:while condition="##class(iKnow.WordCloud).Order(.words,.word,.data)">
+				<span data-weight=#($list(data,2))#>#($list(data,1))#</span>
+			  </csp:while>
+			</div>
+		</div>
+		<script language="javascript">
+			$(document).ready(function(){
+
+				$("#wordcloud2").awesomeCloud({
+					"size" : {
+						"grid" : 9,
+						"factor" : 1
+					},
+					"options" : {
+						"color" : "random-dark",
+						"rotationRatio" : 0.35
+					},
+					"font" : "'Times New Roman', Times, serif",
+					"shape" : "circle"
+				});
+
+			});
+		</script>
+		<!--[if lt IE 7 ]>
+		<script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+		<script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+		<![endif]-->
+	</body>
+</html>
+]]></CSP>
 
 
-<CSP name="jquery.awesomeCloud-0.2.min.js" application="/csp/cropland/" default="1"><![CDATA[
+<CSP name="jquery.awesomeCloud-0.2.min.js" application="/csp/sciensano/" default="1"><![CDATA[
 /*! 
 jQuery.awesomeCloud v0.2 indyarmy.com
 by Russ Porosky
@@ -139,7 +139,7 @@ Extra Thanks:
 ]]></CSP>
 
 
-<CSP name="jquery.min.js" application="/csp/cropland/" default="1"><![CDATA[
+<CSP name="jquery.min.js" application="/csp/sciensano/" default="1"><![CDATA[
 /*!
  * jQuery JavaScript Library v1.4.4
  * http://jquery.com/
@@ -310,65 +310,69 @@ b],f.body["scroll"+b],f.documentElement["scroll"+b],f.body["offset"+b],f.documen
 ]]></CSP>
 
 
-<CSP name="tagcloud2.csp" application="/csp/cropland/" default="1"><![CDATA[
-<!doctype html>
-<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"><![endif]-->
-<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="en"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<script src="jquery.min.js"></script>
-		<script src="jquery.awesomeCloud-0.2.min.js"></script>
-		<style type="text/css">
-			.wordcloud {
-				border: 1px solid #036;
-				height: 7in;
-				margin: 0.5in auto;
-				padding: 0;
-				page-break-after: always;
-				page-break-inside: avoid;
-				width: 7in;
+<Class name="iKnow.WordCloud">
+<IncludeCode>%IKPublic</IncludeCode>
+<TimeChanged>64819,62411.965785</TimeChanged>
+<TimeCreated>64819,62411.965785</TimeCreated>
+
+<Method name="GetWordCloud">
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[domain:%String,sourceId:%String,orderBy:%String,&Words:%String]]></FormalSpec>
+<Implementation><![CDATA[
+	#dim tSC as %Status = $$$OK
+	#dim e As %Exception.AbstractException
+	#dim objDomain as %iKnow.Domain
+	#dim domainId, iKey, df, spread as %Integer
+	#dim tfidf as %Numeric
+	#dim result,data as %String
+	#dim maxScore = 70
+	Kill Words
+	Try {
+		Set objDomain=##class(%iKnow.Domain).Open(domain)
+		Set domainId=objDomain.Id
+		Do ##class(%iKnow.Queries.EntityAPI).GetBySource(.result, domainId, sourceId, 0,,$$$ENTTYPECONCEPT)
+		Set maxFrequency=0,minFrequency=""
+		Set iKey="" For {
+			Set iKey=$Order(result(iKey),1,data) If iKey="" Quit
+			If $List(data,3)>maxFrequency set maxFrequency=$List(data,3)
+			If ($List(data,3)<minFrequency)!(minFrequency="") set minFrequency=$List(data,3)
+		}
+		Set iKey="" For {
+			Set iKey=$Order(result(iKey),1,data) If iKey="" Quit
+			Set df = ##class(%iKnow.Queries.EntityAPI).GetFrequency(domainId,$list(data,1))
+			Set spread = ##class(%iKnow.Queries.EntityAPI).GetSpread(domainId,$list(data,1))
+			set tfidf=$Justify($Select(df=0:0,1:$list(data,3)/df),0,2)
+			If orderBy="tfidf" {
+				Set score=$Justify(tfidf*maxScore+10,0,0)
+			} else {
+				Set score=$Justify($List(data,3)/maxFrequency*maxScore,0,0)
+				if score<10 set score=10
 			}
-		</style>
-	</head>
-	<body>
-	<script language="cache" runat="server">
-	  Set sourceId=$Get(%request.Data("source",1))
-	  If sourceId="" Set sourceId=401
-	  Do ##class(Utils.iKnow).GetWordCloud("CROPLAND",sourceId,"tfidf",.words)
-	  set word=""
-	</script>
-		<div role="main">
-			<div id="wordcloud2" class="wordcloud">
-			  <csp:while condition="##class(Utils.CSP).Order(.words,.word,.data)">
-				<span data-weight=#($list(data,2))#>#($list(data,1))#</span>
-			  </csp:while>
-			</div>
-		</div>
-		<script language="javascript">
-			$(document).ready(function(){
+			if $list(data,2)'?.E1N.E Set Words($i(Words))=$ListBuild($List(data,2), score)
+	/*
+			Write "    {",!
+			Write "     ""concept"" : """,$List(data,2),""",",!
+			Write "     ""frequency"" : ",$List(data,3),",",!
+			Write "     ""tfidf"" : ",tfidf,",",!
+			Write "     ""spread"" : ",spread,"",!
+			Write "    }"
+			If $Order(result(iKey))'="" Write ","
+	*/
+		}		
+	} Catch e {
+	
+	}
+]]></Implementation>
+</Method>
 
-				$("#wordcloud2").awesomeCloud({
-					"size" : {
-						"grid" : 9,
-						"factor" : 1
-					},
-					"options" : {
-						"color" : "random-dark",
-						"rotationRatio" : 0.35
-					},
-					"font" : "'Times New Roman', Times, serif",
-					"shape" : "circle"
-				});
-
-			});
-		</script>
-		<!--[if lt IE 7 ]>
-		<script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
-		<script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
-		<![endif]-->
-	</body>
-</html>
-]]></CSP>
+<Method name="Order">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>array:%String,key:%String,data:%String</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+	Set key=$Order(array(key),1,data)
+	return (key'="")
+]]></Implementation>
+</Method>
+</Class>
 </Export>
